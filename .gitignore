@@ -1,16 +1,12 @@
 # Ignore virtual environment
 venv/
 
-# Ignore Python cache and temp files
+# Ignore database & trained model files
+attendance.db
+model.pkl
+train_status.json
+
+# Ignore datasets & cache
+dataset/
 __pycache__/
 *.pyc
-
-# Ignore model and large auto-generated files
-*.pkl
-*.h5
-*.csv
-*.db
-
-# Ignore IDE/Editor settings
-.vscode/
-.idea/
