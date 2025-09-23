@@ -173,15 +173,26 @@ def recognize_face():
         c.execute("SELECT name FROM students WHERE id=?", (int(pred_label),))
         row = c.fetchone()
         name = row[0] if row else "Unknown"
-        # save attendance record with timestamp
+
+        # ✅ PREVENT DUPLICATE ATTENDANCE FOR SAME DAY
         ts = datetime.datetime.utcnow().isoformat()
-        c.execute("INSERT INTO attendance (student_id, name, timestamp) VALUES (?, ?, ?)", (int(pred_label), name, ts))
-        conn.commit()
+        today = datetime.date.today().isoformat()
+        c.execute("SELECT id FROM attendance WHERE student_id=? AND date(timestamp)=?", (int(pred_label), today))
+        existing = c.fetchone()
+
+        if existing:
+            app.logger.info(f"Attendance already marked for student {pred_label} today. Skipping insert.")
+        else:
+            c.execute("INSERT INTO attendance (student_id, name, timestamp) VALUES (?, ?, ?)",
+                      (int(pred_label), name, ts))
+            conn.commit()
+
         conn.close()
         return jsonify({"recognized": True, "student_id": int(pred_label), "name": name, "confidence": float(conf)}), 200
     except Exception as e:
         app.logger.exception("recognize error")
         return jsonify({"recognized": False, "error": str(e)}), 500
+
 
 # -------- Attendance records & filters --------
 @app.route("/attendance_record", methods=["GET"])
