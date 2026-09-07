@@ -1,51 +1,89 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Add Student</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-<div class="container my-4">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card p-4 shadow-sm">
-        <h4 class="mb-3">Add Student & Capture Faces</h4>
+{% extends "base.html" %}
+{% block title %}Add Student{% endblock %}
+{% block topbar_title %}Add Student{% endblock %}
+{% block content %}
 
-        <form id="studentForm">
-          <div class="row g-2">
-            <div class="col-md-6"><input class="form-control" name="name" placeholder="Full Name" required></div>
-            <div class="col-md-3"><input class="form-control" name="roll" placeholder="Roll"></div>
-            <div class="col-md-3"><input class="form-control" name="reg_no" placeholder="Registration No"></div>
-            <div class="col-md-6"><input class="form-control" name="class" placeholder="Class"></div>
-            <div class="col-md-6"><input class="form-control" name="sec" placeholder="Section"></div>
-          </div>
-          <div class="mt-3 d-flex gap-2">
-            <button id="saveInfoBtn" type="submit" class="btn btn-primary">Save Info</button>
-            <button id="startCaptureBtn" type="button" class="btn btn-warning" disabled>Start Capture (50)</button>
-            <button id="addStudentBtn" type="button" class="btn btn-success" disabled>Add Student</button>
-          </div>
-        </form>
+<div class="page-header">
+  <div>
+    <h1 id="pageTitle">Add Student</h1>
+    <p>Register a student, then capture {{ capture_count }} reference photos for training.</p>
+  </div>
+  <a class="btn btn-secondary" href="{{ url_for('students_page') }}">Back to Students</a>
+</div>
 
-        <hr>
+<div class="grid" style="grid-template-columns: 220px 1fr;">
+  <div class="card" style="align-self:start;">
+    <div class="step-list">
+      <div class="step-item active" id="step1Indicator"><span class="step-dot">1</span> Student info</div>
+      <div class="step-item" id="step2Indicator"><span class="step-dot">2</span> Capture photos</div>
+      <div class="step-item" id="step3Indicator"><span class="step-dot">3</span> Done</div>
+    </div>
+  </div>
 
-        <div class="text-center">
-          <video id="video" width="560" height="420" autoplay muted style="border-radius:10px;border:2px solid #e2e8f0;"></video>
-          <div class="mt-2">
-            <div id="captureStatus" class="small text-muted">Captured 0 / 50</div>
-            <div class="progress mt-1" style="height:12px;">
-              <div id="progressBar" class="progress-bar bg-success" style="width:0%"></div>
-            </div>
-          </div>
+  <div>
+    <!-- Step 1: info form -->
+    <div class="card" id="infoStep">
+      <h3>Student details</h3>
+      <form id="studentForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="grid grid-cols-2">
+          <div class="field"><label>Full Name *</label><input class="input" name="name" required></div>
+          <div class="field"><label>Roll No.</label><input class="input" name="roll"></div>
+          <div class="field"><label>Registration No.</label><input class="input" name="reg_no"></div>
+          <div class="field"><label>Class</label><input class="input" name="class"></div>
+          <div class="field"><label>Section</label><input class="input" name="sec"></div>
         </div>
+        <button type="submit" class="btn btn-primary mt-2">Save & Continue</button>
+      </form>
+    </div>
 
+    <!-- Step 2: capture -->
+    <div class="card hidden" id="captureStep">
+      <div class="card-title-row">
+        <h3 id="captureHeading">Capture photos</h3>
+        <span class="badge badge-neutral" id="captureCountBadge">0 / {{ capture_count }}</span>
+      </div>
+
+      <div class="camera-frame" id="cameraFrame">
+        <video id="video" autoplay muted playsinline></video>
+        <div class="camera-placeholder" id="cameraPlaceholder">
+          {% include 'icons/_camera.svg' %}
+          <span>Camera preview will appear here</span>
+        </div>
+        <div class="camera-overlay-badge state-idle hidden" id="captureBadge"><span class="pulse"></span><span id="captureBadgeText">Idle</span></div>
+      </div>
+
+      <div class="mt-3">
+        <div class="progress"><div class="progress-bar" id="captureProgressBar" style="width:0%"></div></div>
+        <div class="text-sm text-muted mt-2" id="captureStatus">Position your face inside the frame, then start capture.</div>
+      </div>
+
+      <div class="flex gap-2 mt-3">
+        <button id="startCaptureBtn" class="btn btn-primary">Start Capture</button>
+        <button id="retakeBtn" class="btn btn-secondary hidden">Retake</button>
+      </div>
+      <p class="text-xs text-muted mt-3">Look straight at the camera in good lighting. Photos are captured automatically every 200ms.</p>
+    </div>
+
+    <!-- Step 3: done -->
+    <div class="card hidden" id="doneStep">
+      <div class="empty-state">
+        <div class="icon" style="background:var(--success-soft); color:var(--success);">{% include 'icons/_check.svg' %}</div>
+        <h3>Capture complete</h3>
+        <p id="doneMessage">Photos were uploaded successfully. Train the model from the dashboard so this student can be recognized.</p>
+        <div class="flex gap-2" style="justify-content:center;">
+          <a class="btn btn-secondary" href="{{ url_for('students_page') }}">Back to Students</a>
+          <a class="btn btn-primary" href="{{ url_for('index') }}#training">Go Train Model</a>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+{% endblock %}
+{% block scripts %}
+<script>
+  window.CAPTURE_CONFIG = { captureCount: {{ capture_count }} };
+</script>
 <script src="{{ url_for('static', filename='js/camera_add_student.js') }}"></script>
-</body>
-</html>
+{% endblock %}

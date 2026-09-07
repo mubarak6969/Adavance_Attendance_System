@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+{% block topbar_title %}Students{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Students</h1>
+    <p>{{ students|length }} registered · capture requires {{ capture_count }} images per student</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('add_student_page') }}">{% include 'icons/_plus.svg' %} Add Student</a>
+</div>
+
+<form class="mb-4 search-input-wrap" method="get">
+  {% include 'icons/_search.svg' %}
+  <input class="input" type="search" name="q" value="{{ search }}" placeholder="Search by name, roll, or reg. no…">
+</form>
+
+{% if students %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Class / Section</th>
+        <th>Registered</th>
+        <th>Images</th>
+        <th>Status</th>
+        <th>Attendance</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      <tr>
+        <td>
+          <div class="font-medium">{{ s.name }}</div>
+          <div class="text-xs text-muted">{{ s.roll or '—' }} {{ '· ' + s.reg_no if s.reg_no }}</div>
+        </td>
+        <td>{{ s.class or '—' }} {{ '/ ' + s.section if s.section }}</td>
+        <td class="text-sm">{{ s.created_at[:10] }}</td>
+        <td>{{ s.image_count }}</td>
+        <td>
+          {% if s.readiness == 'ready' %}
+            <span class="badge badge-success"><span class="badge-dot"></span>Ready</span>
+          {% elif s.readiness == 'needs_training' %}
+            <span class="badge badge-warning"><span class="badge-dot"></span>Needs training</span>
+          {% else %}
+            <span class="badge badge-danger"><span class="badge-dot"></span>No images</span>
+          {% endif %}
+        </td>
+        <td class="text-sm">{{ s.attendance_count }}</td>
+        <td>
+          <div class="flex gap-2 justify-end">
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('add_student_page') }}?student_id={{ s.id }}">{{ 'Recapture' if s.image_count else 'Capture' }}</a>
+            {% if is_super_admin %}
+            <button class="btn btn-danger btn-sm btn-icon" data-delete-student="{{ s.id }}" data-name="{{ s.name }}" aria-label="Delete {{ s.name }}">
+              {% include 'icons/_trash.svg' %}
+            </button>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <div class="icon">{% include 'icons/_users.svg' %}</div>
+    <h3>{{ 'No students match your search' if search else 'No students yet' }}</h3>
+    <p>{{ 'Try a different search term.' if search else 'Add your first student to start capturing face samples.' }}</p>
+    {% if not search %}
+    <a class="btn btn-primary mt-2" href="{{ url_for('add_student_page') }}">{% include 'icons/_plus.svg' %} Add Student</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/students.js') }}"></script>
+{% endblock %}

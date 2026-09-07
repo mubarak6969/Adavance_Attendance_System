@@ -1,0 +1,289 @@
+/* Premium authentication experience (login/register only). Deliberately
+   separate from the app's main design tokens in style.css -- this is the
+   one page the brief asked to feel like a distinct, cinematic "front door"
+   rather than the restrained dashboard behind it. */
+
+.auth-v2 {
+  --a-bg-0: #05050a;
+  --a-bg-1: #0d0d16;
+  --a-fg: #f5f5f7;
+  --a-fg-muted: rgba(245, 245, 247, 0.62);
+  --a-fg-faint: rgba(245, 245, 247, 0.4);
+  --a-line: rgba(255, 255, 255, 0.14);
+  --a-line-soft: rgba(255, 255, 255, 0.08);
+  --a-glass: rgba(20, 20, 26, 0.55);
+  --a-glass-strong: rgba(15, 15, 20, 0.72);
+  --a-accent: #ffffff;
+  --a-danger-bg: rgba(248, 113, 113, 0.12);
+  --a-danger-fg: #fca5a5;
+  --a-danger-line: rgba(248, 113, 113, 0.35);
+  --a-success-fg: #86efac;
+
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse 900px 600px at 22% 15%, rgba(255, 255, 255, 0.06), transparent 60%),
+    radial-gradient(ellipse 700px 700px at 85% 85%, rgba(255, 255, 255, 0.045), transparent 55%),
+    linear-gradient(160deg, var(--a-bg-1), var(--a-bg-0) 65%);
+  color: var(--a-fg);
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.auth-v2 * { box-sizing: border-box; }
+
+#authCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.auth-v2-nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.6rem clamp(1.25rem, 4vw, 3rem) 0;
+}
+
+.auth-v2-nav .mark {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fff, #9a9aa5);
+  display: flex; align-items: center; justify-content: center;
+  color: #0a0a0f; font-weight: 700; font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+.auth-v2-nav .wordmark {
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--a-fg);
+}
+
+.auth-v2-shell {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.auth-v2-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--a-glass);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  border: 1px solid var(--a-line);
+  border-radius: 20px;
+  padding: 2.5rem 2.1rem 2.2rem;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  animation: authCardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes authCardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-v2-card { animation: none; }
+}
+
+.auth-v2-logo {
+  width: 46px; height: 46px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #ffffff, #86868f);
+  display: flex; align-items: center; justify-content: center;
+  color: #0a0a0f; font-weight: 800; font-size: 1rem;
+  margin-bottom: 1.35rem;
+  box-shadow: 0 8px 24px -8px rgba(255, 255, 255, 0.25);
+}
+
+.auth-v2-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 0 0 0.55rem;
+  color: var(--a-fg);
+}
+
+.auth-v2-tagline {
+  font-size: 0.86rem;
+  font-weight: 300;
+  color: var(--a-fg-muted);
+  margin: 0 0 1.75rem;
+  line-height: 1.5;
+}
+
+.auth-v2-alert {
+  font-size: 0.82rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  margin-bottom: 1.3rem;
+  line-height: 1.45;
+  animation: authAlertIn 0.25s ease both;
+}
+@media (prefers-reduced-motion: reduce) { .auth-v2-alert { animation: none; } }
+@keyframes authAlertIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+.auth-v2-alert.error {
+  background: var(--a-danger-bg);
+  border: 1px solid var(--a-danger-line);
+  color: var(--a-danger-fg);
+}
+.auth-v2-alert.success {
+  background: rgba(134, 239, 172, 0.1);
+  border: 1px solid rgba(134, 239, 172, 0.3);
+  color: var(--a-success-fg);
+}
+
+.auth-v2-field { margin-bottom: 1.15rem; }
+
+.auth-v2-field label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--a-fg-faint);
+  margin-bottom: 0.5rem;
+}
+
+.auth-v2-input-wrap { position: relative; }
+
+.auth-v2-field input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--a-line-soft);
+  border-radius: 11px;
+  padding: 0.78rem 0.95rem;
+  color: var(--a-fg);
+  font-size: 0.94rem;
+  font-family: inherit;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  /* 16px effective size on iOS prevents the input-focus zoom; clamp keeps
+     it visually consistent with the 0.94rem elsewhere on larger screens. */
+  font-size: clamp(16px, 0.94rem, 1rem);
+}
+
+.auth-v2-field input::placeholder { color: var(--a-fg-faint); }
+
+.auth-v2-field input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.065);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+
+.auth-v2-field input:focus-visible { outline: none; }
+
+.auth-v2-hint { font-size: 0.74rem; color: var(--a-fg-faint); margin-top: 0.45rem; }
+.auth-v2-hint.error-text { color: var(--a-danger-fg); }
+
+.auth-v2-submit {
+  width: 100%;
+  background: #ffffff;
+  color: #0a0a0f;
+  border: none;
+  border-radius: 11px;
+  padding: 0.85rem 1rem;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  margin-top: 0.35rem;
+  transition: transform 0.12s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+}
+.auth-v2-submit:hover:not(:disabled) { box-shadow: 0 10px 30px -8px rgba(255, 255, 255, 0.35); }
+.auth-v2-submit:active:not(:disabled) { transform: scale(0.985); }
+.auth-v2-submit:disabled { opacity: 0.7; cursor: default; }
+.auth-v2-submit:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.auth-v2-spinner {
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  border: 2px solid rgba(10, 10, 15, 0.25);
+  border-top-color: #0a0a0f;
+  animation: authSpin 0.7s linear infinite;
+  display: none;
+}
+.auth-v2-submit.loading .auth-v2-spinner { display: inline-block; }
+@keyframes authSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .auth-v2-spinner { animation-duration: 1.4s; }
+}
+
+.auth-v2-footer {
+  margin-top: 1.6rem;
+  text-align: center;
+  font-size: 0.83rem;
+  color: var(--a-fg-faint);
+}
+.auth-v2-footer a {
+  color: var(--a-fg);
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid var(--a-line);
+  padding-bottom: 1px;
+  transition: border-color 0.15s ease;
+}
+.auth-v2-footer a:hover { border-color: var(--a-fg); }
+
+.auth-v2-back {
+  margin-top: 1.4rem;
+  text-align: center;
+}
+.auth-v2-back a {
+  color: var(--a-fg-faint);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+.auth-v2-back a:hover { color: var(--a-fg); }
+
+/* Password strength meter (register page) */
+.auth-v2-strength { display: flex; gap: 4px; margin-top: 0.55rem; }
+.auth-v2-strength-bar {
+  height: 3px; flex: 1; border-radius: 2px;
+  background: var(--a-line-soft);
+  transition: background 0.2s ease;
+}
+.auth-v2-strength-label {
+  font-size: 0.72rem;
+  color: var(--a-fg-faint);
+  margin-top: 0.4rem;
+}
+
+.auth-v2-approval-note {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--a-line-soft);
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.78rem;
+  color: var(--a-fg-muted);
+  line-height: 1.5;
+  margin-top: 1.4rem;
+}
+.auth-v2-approval-note svg { flex-shrink: 0; margin-top: 2px; color: var(--a-fg-faint); }
+
+@media (max-width: 380px) {
+  .auth-v2-card { padding: 2.1rem 1.5rem 1.9rem; border-radius: 16px; }
+}

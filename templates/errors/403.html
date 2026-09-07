@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Access denied{% endblock %}
+{% block body %}
+<div class="error-shell">
+  <div>
+    <div class="code">403</div>
+    <h2>Access denied</h2>
+    <p>You don't have permission to view this page.</p>
+    <a class="btn btn-primary mt-3" href="{{ url_for('login') }}">Sign in</a>
+  </div>
+</div>
+{% endblock %}

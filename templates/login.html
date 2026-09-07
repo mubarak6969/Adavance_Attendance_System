@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+{% block guest_content %}
+<div class="auth-v2">
+  {% include '_auth_background.html' %}
+
+  <div class="auth-v2-nav">
+    <span class="mark">FA</span>
+    <span class="wordmark">Advance Attendance</span>
+  </div>
+
+  <div class="auth-v2-shell">
+    <div class="auth-v2-card">
+      <div class="auth-v2-logo">FA</div>
+      <h1 class="auth-v2-title">Advance Attendance</h1>
+      <p class="auth-v2-tagline">Intelligent attendance, built for people.</p>
+
+      {% if error %}
+      <div class="auth-v2-alert error" role="alert">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('login') }}" id="loginForm" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="auth-v2-field">
+          <label for="email">Email</label>
+          <div class="auth-v2-input-wrap">
+            <input class="input" id="email" name="email" type="email" inputmode="email"
+                   autocomplete="username" required autofocus placeholder="you@example.com">
+          </div>
+        </div>
+        <div class="auth-v2-field">
+          <label for="password">Password</label>
+          <div class="auth-v2-input-wrap">
+            <input class="input" id="password" name="password" type="password"
+                   autocomplete="current-password" required placeholder="••••••••">
+          </div>
+        </div>
+        <button class="auth-v2-submit" type="submit" id="loginSubmit">
+          <span class="auth-v2-spinner" aria-hidden="true"></span>
+          <span class="label">Sign in</span>
+        </button>
+      </form>
+
+      <p class="auth-v2-footer">
+        Don't have an account? <a href="{{ url_for('register') }}">Create account</a>
+      </p>
+      <p class="auth-v2-back">
+        <a href="{{ url_for('mark_attendance_page') }}">Open the attendance kiosk instead →</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var form = document.getElementById("loginForm");
+    var submit = document.getElementById("loginSubmit");
+    if (!form || !submit) return;
+    form.addEventListener("submit", function () {
+      if (submit.disabled) return;
+      submit.disabled = true;
+      submit.classList.add("loading");
+      submit.querySelector(".label").textContent = "Signing in…";
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Account created{% endblock %}
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+{% block guest_content %}
+<div class="auth-v2">
+  {% include '_auth_background.html' %}
+
+  <div class="auth-v2-nav">
+    <span class="mark">FA</span>
+    <span class="wordmark">Advance Attendance</span>
+  </div>
+
+  <div class="auth-v2-shell">
+    <div class="auth-v2-card">
+      <div class="auth-v2-logo">FA</div>
+      <h1 class="auth-v2-title">Check your inbox</h1>
+      <p class="auth-v2-tagline">
+        We've created an account for <strong style="color:var(--a-fg);">{{ email }}</strong>.
+      </p>
+      <div class="auth-v2-approval-note">
+        {% include 'icons/_shield.svg' %}
+        <span>Your account is pending administrator approval. You'll be able to sign in once it's been reviewed and enabled.</span>
+      </div>
+      <p class="auth-v2-footer">
+        <a href="{{ url_for('login') }}">Back to sign in</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

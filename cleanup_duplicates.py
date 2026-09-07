@@ -1,30 +1,45 @@
+"""One-time maintenance utility for databases created before the unique
+(student_id, date) index existed on the attendance table.
+
+New installs and app.py's own startup (via db.init_db) already prevent and
+self-heal duplicate same-day attendance rows, so this script is normally
+unnecessary -- keep it only for migrating an older exported database.
+
+Usage:
+    python cleanup_duplicates.py [path/to/attendance.db]
+"""
+import sys
 import sqlite3
-import datetime
 
-DB_PATH = "attendance.db"
+from config import get_config
 
-conn = sqlite3.connect(DB_PATH)
-c = conn.cursor()
 
-# Get all records
-c.execute("SELECT id, student_id, date(timestamp) FROM attendance ORDER BY timestamp ASC")
-rows = c.fetchall()
+def cleanup_duplicates(db_path):
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = conn.execute(
+            "SELECT id, student_id, date(timestamp) AS d FROM attendance ORDER BY timestamp ASC"
+        ).fetchall()
 
-# Track first record per student per day
-seen = set()
-to_delete = []
+        seen = set()
+        to_delete = []
+        for row in rows:
+            key = (row["student_id"], row["d"])
+            if key in seen:
+                to_delete.append(row["id"])
+            else:
+                seen.add(key)
 
-for row in rows:
-    key = (row[1], row[2])  # (student_id, date)
-    if key in seen:
-        to_delete.append(row[0])  # store duplicate id
-    else:
-        seen.add(key)
+        if to_delete:
+            conn.executemany("DELETE FROM attendance WHERE id=?", [(i,) for i in to_delete])
+            conn.commit()
 
-# Delete duplicates
-for record_id in to_delete:
-    c.execute("DELETE FROM attendance WHERE id=?", (record_id,))
+        print(f"Deleted {len(to_delete)} duplicate attendance record(s).")
+    finally:
+        conn.close()
 
-conn.commit()
-conn.close()
-print(f"Deleted {len(to_delete)} duplicate records.")
+
+if __name__ == "__main__":
+    target = sys.argv[1] if len(sys.argv) > 1 else get_config().DATABASE_PATH
+    cleanup_duplicates(target)

@@ -1,0 +1,125 @@
+<canvas id="authCanvas" aria-hidden="true"></canvas>
+<script type="module">
+  (function () {
+    "use strict";
+    var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var canvas = document.getElementById("authCanvas");
+    if (!canvas) return;
+
+    // Reduced-motion / no-WebGL: drop the canvas entirely and let the
+    // static CSS gradient in the page's <style> block be the whole
+    // background. The UI is fully functional either way -- this layer is
+    // decoration only, never load-bearing for anything.
+    var hasWebGL = false;
+    try {
+      var testCanvas = document.createElement("canvas");
+      hasWebGL = !!(window.WebGLRenderingContext &&
+        (testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl")));
+    } catch (e) { hasWebGL = false; }
+
+    if (reduceMotion || !hasWebGL) {
+      canvas.remove();
+      return;
+    }
+
+    import("https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js")
+      .then(function (THREE) {
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.z = 11;
+
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+        // A small, static point cloud + the line segments between nearby
+        // points, computed once at startup -- not per frame -- so the only
+        // per-frame cost is rendering a couple of draw calls and rotating
+        // one group. Cheap enough to run smoothly on modest hardware.
+        var isSmallScreen = window.innerWidth < 640;
+        var COUNT = isSmallScreen ? 80 : 150;
+        var SPREAD_X = 20, SPREAD_Y = 13, SPREAD_Z = 10;
+        var positions = new Float32Array(COUNT * 3);
+        for (var i = 0; i < COUNT; i++) {
+          positions[i * 3] = (Math.random() - 0.5) * SPREAD_X;
+          positions[i * 3 + 1] = (Math.random() - 0.5) * SPREAD_Y;
+          positions[i * 3 + 2] = (Math.random() - 0.5) * SPREAD_Z;
+        }
+
+        var pointGeometry = new THREE.BufferGeometry();
+        pointGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        var pointMaterial = new THREE.PointsMaterial({
+          size: 0.05, color: 0xffffff, transparent: true, opacity: 0.75, sizeAttenuation: true,
+        });
+        var points = new THREE.Points(pointGeometry, pointMaterial);
+
+        var maxDist = 3.1;
+        var linePositions = [];
+        for (var a = 0; a < COUNT; a++) {
+          for (var b = a + 1; b < COUNT; b++) {
+            var dx = positions[a * 3] - positions[b * 3];
+            var dy = positions[a * 3 + 1] - positions[b * 3 + 1];
+            var dz = positions[a * 3 + 2] - positions[b * 3 + 2];
+            if (Math.sqrt(dx * dx + dy * dy + dz * dz) < maxDist) {
+              linePositions.push(
+                positions[a * 3], positions[a * 3 + 1], positions[a * 3 + 2],
+                positions[b * 3], positions[b * 3 + 1], positions[b * 3 + 2]
+              );
+            }
+          }
+        }
+        var lineGeometry = new THREE.BufferGeometry();
+        lineGeometry.setAttribute("position", new THREE.Float32BufferAttribute(linePositions, 3));
+        var lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.07 });
+        var lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+        var group = new THREE.Group();
+        group.add(points);
+        group.add(lines);
+        scene.add(group);
+
+        // Gentle pointer parallax -- purely decorative, never required to
+        // use the page (keyboard-only and touch users see the same scene
+        // idling with its slow autonomous rotation instead).
+        var mouseX = 0, mouseY = 0;
+        window.addEventListener("pointermove", function (e) {
+          mouseX = e.clientX / window.innerWidth - 0.5;
+          mouseY = e.clientY / window.innerHeight - 0.5;
+        }, { passive: true });
+
+        var clock = new THREE.Clock();
+        var frameId = null;
+        function animate() {
+          frameId = requestAnimationFrame(animate);
+          var t = clock.getElapsedTime();
+          group.rotation.y = t * 0.028 + mouseX * 0.25;
+          group.rotation.x = mouseY * 0.12;
+          renderer.render(scene, camera);
+        }
+        animate();
+
+        function onResize() {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        window.addEventListener("resize", onResize);
+
+        // Pause rendering when the tab is hidden -- no reason to keep
+        // spending GPU/CPU on an invisible decorative canvas.
+        document.addEventListener("visibilitychange", function () {
+          if (document.hidden) {
+            if (frameId) cancelAnimationFrame(frameId);
+            frameId = null;
+          } else if (!frameId) {
+            animate();
+          }
+        });
+      })
+      .catch(function () {
+        // CDN unreachable or module failed to load -- fall back to the
+        // static CSS gradient background silently, never block the form.
+        canvas.remove();
+      });
+  })();
+</script>

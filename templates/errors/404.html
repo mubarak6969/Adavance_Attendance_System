@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Page not found{% endblock %}
+{% block body %}
+<div class="error-shell">
+  <div>
+    <div class="code">404</div>
+    <h2>Page not found</h2>
+    <p>The page you're looking for doesn't exist or was moved.</p>
+    <a class="btn btn-primary mt-3" href="{{ url_for('index') if is_authenticated else url_for('login') }}">Go home</a>
+  </div>
+</div>
+{% endblock %}

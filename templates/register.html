@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+{% block guest_content %}
+<div class="auth-v2">
+  {% include '_auth_background.html' %}
+
+  <div class="auth-v2-nav">
+    <span class="mark">FA</span>
+    <span class="wordmark">Advance Attendance</span>
+  </div>
+
+  <div class="auth-v2-shell">
+    <div class="auth-v2-card">
+      <div class="auth-v2-logo">FA</div>
+      <h1 class="auth-v2-title">Create Account</h1>
+      <p class="auth-v2-tagline">Register to help run attendance for your institution.</p>
+
+      <form method="post" action="{{ url_for('register') }}" id="registerForm" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="auth-v2-field">
+          <label for="name">Full name</label>
+          <input class="input" id="name" name="name" type="text" autocomplete="name" required
+                 value="{{ name }}" placeholder="Jane Doe">
+          {% if errors.name %}<div class="auth-v2-hint error-text">{{ errors.name }}</div>{% endif %}
+        </div>
+
+        <div class="auth-v2-field">
+          <label for="email">Email</label>
+          <input class="input" id="email" name="email" type="email" inputmode="email" autocomplete="username" required
+                 value="{{ email }}" placeholder="you@example.com">
+          {% if errors.email %}<div class="auth-v2-hint error-text">{{ errors.email }}</div>{% endif %}
+        </div>
+
+        <div class="auth-v2-field">
+          <label for="password">Password</label>
+          <input class="input" id="password" name="password" type="password" autocomplete="new-password" required
+                 minlength="8" placeholder="At least 8 characters">
+          <div class="auth-v2-strength" id="strengthBars" aria-hidden="true">
+            <div class="auth-v2-strength-bar"></div>
+            <div class="auth-v2-strength-bar"></div>
+            <div class="auth-v2-strength-bar"></div>
+            <div class="auth-v2-strength-bar"></div>
+          </div>
+          <div class="auth-v2-strength-label" id="strengthLabel">Password strength</div>
+          {% if errors.password %}<div class="auth-v2-hint error-text">{{ errors.password }}</div>{% endif %}
+        </div>
+
+        <div class="auth-v2-field">
+          <label for="confirm_password">Confirm password</label>
+          <input class="input" id="confirm_password" name="confirm_password" type="password"
+                 autocomplete="new-password" required placeholder="Re-enter your password">
+          {% if errors.confirm_password %}<div class="auth-v2-hint error-text">{{ errors.confirm_password }}</div>{% endif %}
+        </div>
+
+        <button class="auth-v2-submit" type="submit" id="registerSubmit">
+          <span class="auth-v2-spinner" aria-hidden="true"></span>
+          <span class="label">Create account</span>
+        </button>
+
+        <div class="auth-v2-approval-note">
+          {% include 'icons/_shield.svg' %}
+          <span>Your account will be reviewed by an administrator before access is enabled. You'll be able to sign in once approved.</span>
+        </div>
+      </form>
+
+      <p class="auth-v2-footer">
+        Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var form = document.getElementById("registerForm");
+    var submit = document.getElementById("registerSubmit");
+    var passwordInput = document.getElementById("password");
+    var bars = document.querySelectorAll("#strengthBars .auth-v2-strength-bar");
+    var label = document.getElementById("strengthLabel");
+
+    function scorePassword(pw) {
+      if (!pw) return 0;
+      var score = 0;
+      if (pw.length >= 8) score++;
+      if (pw.length >= 12) score++;
+      if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+      if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+      return Math.min(score, 4);
+    }
+
+    var LABELS = ["Too short", "Weak", "Fair", "Good", "Strong"];
+    var COLORS = ["#f87171", "#f87171", "#fbbf24", "#a3e635", "#86efac"];
+
+    if (passwordInput && bars.length) {
+      passwordInput.addEventListener("input", function () {
+        var score = scorePassword(passwordInput.value);
+        bars.forEach(function (bar, i) {
+          bar.style.background = i < score ? COLORS[score] : "";
+        });
+        label.textContent = passwordInput.value ? LABELS[score] : "Password strength";
+      });
+    }
+
+    if (form && submit) {
+      form.addEventListener("submit", function () {
+        if (submit.disabled) return;
+        submit.disabled = true;
+        submit.classList.add("loading");
+        submit.querySelector(".label").textContent = "Creating account…";
+      });
+    }
+  })();
+</script>
+{% endblock %}

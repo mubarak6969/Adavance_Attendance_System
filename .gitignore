@@ -1,12 +1,31 @@
 # Ignore virtual environment
 venv/
+.venv/
 
 # Ignore database & trained model files
 attendance.db
 model.pkl
+model_meta.json
 train_status.json
 
 # Ignore datasets & cache
 dataset/
 __pycache__/
 *.pyc
+
+# Secrets & local config
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Editor/OS cruft
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+.pytest_cache/

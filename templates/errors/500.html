@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Something went wrong{% endblock %}
+{% block body %}
+<div class="error-shell">
+  <div>
+    <div class="code">500</div>
+    <h2>Something went wrong</h2>
+    <p>An unexpected error occurred. It's been logged — please try again.</p>
+    <a class="btn btn-primary mt-3" href="{{ url_for('index') if is_authenticated else url_for('login') }}">Go home</a>
+  </div>
+</div>
+{% endblock %}

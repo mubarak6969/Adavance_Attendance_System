@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{% block title %}Attendance{% endblock %} · Attendance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem('theme'); } catch (e) {}
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+    })();
+  </script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="toast-container" id="toastContainer"></div>
+
+  {% block body %}
+  {% if is_authenticated %}
+  <div class="app-shell">
+    <div class="sidebar-scrim" id="sidebarScrim"></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="mark">FA</span>
+        <span>Attendance</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item {{ 'active' if active_nav == 'dashboard' }}" href="{{ url_for('index') }}">
+          {% include 'icons/_grid.svg' %} Dashboard
+        </a>
+        <a class="nav-item {{ 'active' if active_nav == 'students' }}" href="{{ url_for('students_page') }}">
+          {% include 'icons/_users.svg' %} Students
+        </a>
+        <a class="nav-item {{ 'active' if active_nav == 'mark' }}" href="{{ url_for('mark_attendance_page') }}" target="_blank" rel="noopener">
+          {% include 'icons/_camera.svg' %} Mark Attendance
+        </a>
+        <a class="nav-item {{ 'active' if active_nav == 'records' }}" href="{{ url_for('attendance_record') }}">
+          {% include 'icons/_list.svg' %} Attendance
+        </a>
+        <a class="nav-item {{ 'active' if active_nav == 'analytics' }}" href="{{ url_for('analytics') }}">
+          {% include 'icons/_chart.svg' %} Analytics
+        </a>
+        {% if is_super_admin %}
+        <div class="nav-section-label">System</div>
+        <a class="nav-item {{ 'active' if active_nav == 'training' }}" href="{{ url_for('index') }}#training">
+          {% include 'icons/_cpu.svg' %} Model Training
+        </a>
+        <a class="nav-item {{ 'active' if active_nav == 'admin' }}" href="{{ url_for('admin_page') }}">
+          {% include 'icons/_shield.svg' %} Administration
+        </a>
+        {% endif %}
+      </nav>
+      <div class="sidebar-footer">
+        <div class="theme-toggle" id="themeToggle" role="group" aria-label="Theme">
+          <button type="button" data-theme-choice="light" aria-label="Light theme">{% include 'icons/_sun.svg' %}</button>
+          <button type="button" data-theme-choice="system" aria-label="System theme">{% include 'icons/_monitor.svg' %}</button>
+          <button type="button" data-theme-choice="dark" aria-label="Dark theme">{% include 'icons/_moon.svg' %}</button>
+        </div>
+        <div class="user-chip">
+          <span class="avatar">{{ current_user.name[:2]|upper if current_user else 'U' }}</span>
+          <span style="flex:1; min-width:0;">
+            <span class="text-sm font-medium" style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ current_user.name if current_user else 'User' }}</span>
+            <span class="badge {{ 'badge-info' if is_super_admin else 'badge-neutral' }}" style="margin-top:2px;">{{ 'Super Admin' if is_super_admin else 'Operator' }}</span>
+          </span>
+          <form method="post" action="{{ url_for('logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button class="logout-btn" type="submit" title="Log out" aria-label="Log out">{% include 'icons/_logout.svg' %}</button>
+          </form>
+        </div>
+      </div>
+    </aside>
+
+    <div style="flex:1; min-width:0;">
+      <div class="topbar">
+        <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">{% include 'icons/_menu.svg' %}</button>
+        <strong>{% block topbar_title %}Attendance{% endblock %}</strong>
+      </div>
+      <main class="main">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  {% else %}
+    {% block guest_content %}{% endblock %}
+  {% endif %}
+  {% endblock %}
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

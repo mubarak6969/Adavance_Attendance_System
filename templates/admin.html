@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Administration{% endblock %}
+{% block topbar_title %}Administration{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>User Management</h1>
+    <p>Approve new accounts and manage who can access the system.</p>
+  </div>
+</div>
+
+<div class="grid grid-cols-4 mb-4">
+  <div class="stat-card">
+    <div class="stat-label">Total Users <span class="stat-icon accent">{% include 'icons/_users.svg' %}</span></div>
+    <div class="stat-value">{{ counts.total }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Active <span class="stat-icon success">{% include 'icons/_check.svg' %}</span></div>
+    <div class="stat-value">{{ counts.active }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Pending Approval <span class="stat-icon warning">{% include 'icons/_clock.svg' %}</span></div>
+    <div class="stat-value">{{ counts.pending }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Disabled <span class="stat-icon info">{% include 'icons/_alert.svg' %}</span></div>
+    <div class="stat-value">{{ counts.disabled }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title-row">
+    <h3>All Users</h3>
+  </div>
+
+  {% if users %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Last Login</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr data-user-row="{{ u.id }}">
+          <td class="font-medium">{{ u.name }}</td>
+          <td class="text-sm">{{ u.email }}</td>
+          <td>
+            <span class="badge {{ 'badge-info' if u.role == 'super_admin' else 'badge-neutral' }}">
+              {{ 'Super Admin' if u.role == 'super_admin' else 'User' }}
+            </span>
+          </td>
+          <td>
+            {% if not u.is_approved %}
+              <span class="badge badge-warning"><span class="badge-dot"></span>Pending</span>
+            {% elif not u.is_active %}
+              <span class="badge badge-danger"><span class="badge-dot"></span>Disabled</span>
+            {% else %}
+              <span class="badge badge-success"><span class="badge-dot"></span>Active</span>
+            {% endif %}
+          </td>
+          <td class="text-sm">{{ u.created_at[:10] }}</td>
+          <td class="text-sm">{{ u.last_login_at[:16].replace('T',' ') if u.last_login_at else 'Never' }}</td>
+          <td>
+            <div class="flex gap-2 justify-end flex-wrap">
+              {% if not u.is_approved %}
+                <button class="btn btn-sm btn-primary" data-user-action="approve" data-user-id="{{ u.id }}">Approve</button>
+              {% elif u.is_active %}
+                <button class="btn btn-sm btn-secondary" data-user-action="deactivate" data-user-id="{{ u.id }}">Deactivate</button>
+              {% else %}
+                <button class="btn btn-sm btn-secondary" data-user-action="reactivate" data-user-id="{{ u.id }}">Reactivate</button>
+              {% endif %}
+
+              {% if u.id != current_user.id %}
+                {% if u.role == 'super_admin' %}
+                  <button class="btn btn-sm btn-outline" data-user-action="role" data-role="user" data-user-id="{{ u.id }}">Make User</button>
+                {% else %}
+                  <button class="btn btn-sm btn-outline" data-user-action="role" data-role="super_admin" data-user-id="{{ u.id }}">Make Super Admin</button>
+                {% endif %}
+                <button class="btn btn-sm btn-danger btn-icon" data-user-action="delete" data-user-id="{{ u.id }}" data-user-name="{{ u.name }}" aria-label="Delete {{ u.name }}">
+                  {% include 'icons/_trash.svg' %}
+                </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">{% include 'icons/_users.svg' %}</div>
+    <h3>No users yet</h3>
+    <p>New registrations will appear here for approval.</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

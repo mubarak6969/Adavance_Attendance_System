@@ -1,123 +1,117 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Digital Attendance Dashboard</title>
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+{% block content %}
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="page-header">
+  <div>
+    <h1>{{ 'Welcome to Advance Attendance' if stats.total_students == 0 else 'Dashboard' }}</h1>
+    <p>{{ 'No students yet — add your first one to get started.' if stats.total_students == 0 else "Overview of students, recognition readiness, and today's attendance." }}</p>
+  </div>
+  <div class="flex gap-2">
+    <a class="btn {{ 'btn-primary' if stats.total_students == 0 else 'btn-secondary' }}" href="{{ url_for('add_student_page') }}">{% include 'icons/_plus.svg' %} Add {{ 'your first student' if stats.total_students == 0 else 'Student' }}</a>
+    <a class="btn btn-primary" href="{{ url_for('mark_attendance_page') }}" target="_blank" rel="noopener">{% include 'icons/_camera.svg' %} Open Kiosk</a>
+  </div>
+</div>
 
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: url("static/images/bg.png") center/cover no-repeat;
-      /*display: flex;                 /* push content as one column 
-      justify-content: flex-end;
-      align-items: flex-start;*/
-    }
+<div class="grid grid-cols-4 mb-4">
+  <div class="stat-card">
+    <div class="stat-label">Total Students <span class="stat-icon accent">{% include 'icons/_users.svg' %}</span></div>
+    <div class="stat-value">{{ stats.total_students }}</div>
+    <div class="stat-sub">Registered in the system</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Ready to Recognize <span class="stat-icon success">{% include 'icons/_check.svg' %}</span></div>
+    <div class="stat-value">{{ stats.ready_count }}</div>
+    <div class="stat-sub">{{ stats.total_students - stats.ready_count }} not yet trained</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Today's Attendance <span class="stat-icon info">{% include 'icons/_clock.svg' %}</span></div>
+    <div class="stat-value">{{ stats.today_count }}</div>
+    <div class="stat-sub">Marked so far today</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Attendance Rate <span class="stat-icon warning">{% include 'icons/_chart.svg' %}</span></div>
+    <div class="stat-value">{{ stats.attendance_rate }}%</div>
+    <div class="stat-sub">Of registered students, today</div>
+  </div>
+</div>
 
-    /* Right panel column */
-    .right-panel {
-      width: 100%;
-      max-width: 900px;              /* tighter max width */
-      padding: 2rem;
-      background: rgba(255,255,255,0.1);
-      overflow-y: auto;              /* scroll if tall */
-    }
-
-    /* Navbar gradient */
-    .nav-gradient {
-      background: linear-gradient(90deg,#0f172a,#3b82f6);
-      margin-bottom: 1.5rem;
-      border-radius: 0.75rem;
-    }
-
-    /* Cards */
-    .glass-card {
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(6px);
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      transition: transform 0.2s ease;
-    }
-    .glass-card:hover { transform: translateY(-3px); }
-
-    /* Progress bar */
-    .progress {
-      background-color: #e9ecef;
-      border-radius: 10px;
-    }
-    .progress-bar {
-      background: linear-gradient(90deg, #3b82f6, #0ea5e9);
-      font-weight: 600;
-    }
-
-    /* Small screens: center panel */
-    @media (max-width: 992px) {
-      body { justify-content: center; }
-      .right-panel { max-width: 95vw; }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="right-panel">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark nav-gradient shadow-sm px-3">
-      <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="/">Digital Attendance</a>
-        <div class="d-flex">
-          <a class="btn btn-outline-light me-2" href="/add_student">Add Student</a>
-          <a class="btn btn-outline-light me-2" href="/mark_attendance">Mark Attendance</a>
-          <a class="btn btn-outline-light" href="/attendance_record">Records</a>
-        </div>
+<div class="grid" style="grid-template-columns: 1.6fr 1fr;" id="training">
+  <div class="card">
+    <div class="card-title-row">
+      <div>
+        <h3>Attendance — last 30 days</h3>
       </div>
-    </nav>
-
-    <!-- Dashboard Content -->
-    <!-- Use .container instead of container-fluid to avoid full-width stretch -->
-    <div class="container">
-      <div class="row g-4">
-        <div class="col-lg-4">
-          <div class="card p-3 shadow-sm glass-card">
-            <h5>Quick Actions</h5>
-            <p class="small text-muted">Create student entries, capture faces, or start recognition.</p>
-            <div class="d-grid gap-2">
-              <a class="btn btn-primary" href="/add_student">Add Student</a>
-              <a class="btn btn-success" href="/mark_attendance">Mark Attendance</a>
-              <a class="btn btn-warning" href="/attendance_record">View Records</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-lg-8">
-          <div class="card p-3 shadow-sm glass-card">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">Train Model</h5>
-              <button id="trainBtn" class="btn btn-outline-primary">Start Training</button>
-            </div>
-            <div class="mt-3">
-              <div class="progress" style="height:28px;">
-                <div id="trainProgress" class="progress-bar" style="width:0%">0%</div>
-              </div>
-              <div id="trainMsg" class="mt-2 text-muted small">Model not trained yet.</div>
-            </div>
-          </div>
-
-          <div class="card p-3 shadow-sm mt-4 glass-card">
-            <h5>Attendance (Last 30 days)</h5>
-            <div class="chart-container" style="position:relative; height:320px; width:100%;">
-               <canvas id="attendanceChart"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
+    </div>
+    <div class="chart-container">
+      <canvas id="attendanceChart"></canvas>
     </div>
   </div>
 
-  <script src="static/js/dashboard.js"></script>
-</body>
-</html>
+  <div class="card">
+    <div class="card-title-row">
+      <h3>Model Training</h3>
+      <span class="badge {{ 'badge-success' if stats.model_exists else 'badge-neutral' }}">
+        <span class="badge-dot"></span>{{ 'Trained' if stats.model_exists else 'Not trained' }}
+      </span>
+    </div>
+
+    {% if is_super_admin %}
+    <div class="flex justify-between text-sm mb-2">
+      <span class="text-muted">Last trained</span>
+      <span class="font-medium">{{ stats.last_trained[:19].replace('T',' ') + ' UTC' if stats.last_trained else 'Never' }}</span>
+    </div>
+    <div class="flex justify-between text-sm mb-3">
+      <span class="text-muted">Training samples</span>
+      <span class="font-medium">{{ stats.num_samples or 0 }} image(s)</span>
+    </div>
+
+    {% if stats.total_students == 0 %}
+    <p class="text-sm text-muted mb-3">Register students to begin training.</p>
+    {% else %}
+    <div class="progress">
+      <div id="trainProgress" class="progress-bar" style="width:{{ stats.train_status.progress or 0 }}%"></div>
+    </div>
+    <div id="trainMsg" class="text-xs text-muted mt-2">{{ stats.train_status.message or 'Model not trained yet.' }}</div>
+    {% endif %}
+
+    <button id="trainBtn" class="btn btn-primary btn-block mt-3" {{ 'disabled' if stats.total_students == 0 }}>Start Training</button>
+    <p class="text-xs text-muted mt-2">Trains on all captured student photos. Safe to re-run any time — only one training job runs at a time.</p>
+    {% else %}
+    <p class="text-sm text-muted">Model training is managed by a super admin.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-title-row">
+    <h3>Recent Attendance</h3>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('attendance_record') }}">View all</a>
+  </div>
+  {% if stats.recent %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Timestamp (UTC)</th></tr></thead>
+      <tbody>
+        {% for r in stats.recent %}
+        <tr><td>{{ r['name'] }}</td><td>{{ r['timestamp'][:19].replace('T',' ') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">{% include 'icons/_clock.svg' %}</div>
+    <h3>No attendance yet</h3>
+    <p>Once students are recognized at the kiosk, entries will appear here.</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
